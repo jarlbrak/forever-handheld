@@ -75,7 +75,7 @@ jobs:
           [ "$(cat top.txt)" = "ForeverHandheld" ] || { echo "unexpected top-level folders"; exit 1; }
           unzip -l "$zip" | grep -q 'ForeverHandheld/ForeverHandheld.toc'
           ! unzip -Z1 "$zip" | grep -E '^ForeverHandheld/(tests|tools|patches|docs)/'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ForeverHandheld-package
           path: .release/*.zip
