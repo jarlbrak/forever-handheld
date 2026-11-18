@@ -1,0 +1,23 @@
+name: Idea or improvement
+description: Suggest a change to the handheld HUD, panels or readability
+title: "Idea: "
+labels: ["enhancement"]
+assignees: ["jarlbrak"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is hard to do on a controller today?
+      description: Describe the moment in play, the screen, and why it is awkward on a handheld.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This is about presentation (what is shown and where), not about which button does what.

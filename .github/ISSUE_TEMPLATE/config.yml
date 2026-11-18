@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or setup help
+    url: https://github.com/jarlbrak/forever-handheld/discussions/categories/q-a
+    about: Ask about installing, configuring or playing with Forever Handheld.
+  - name: ControllerForever bugs
+    url: https://www.curseforge.com/wow/addons/controllerforever
+    about: Button bindings, wheels and secure input belong to ControllerForever. Report those there.

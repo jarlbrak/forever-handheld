@@ -1,0 +1,33 @@
+name: Release
+
+# Push a tag such as v3.7.181 to build ForeverHandheld-v3.7.181.zip with the BigWigs packager
+# and attach it to a GitHub release. Release notes come from CHANGELOG.md (manual-changelog).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: "5.1"
+      - name: Tests
+        run: LUA=lua tests/run.sh
+      - name: Check the TOC version matches the tag
+        run: |
+          toc=$(sed -n 's/^## Version: *//p' ForeverHandheld/ForeverHandheld.toc | tr -d '\r')
+          [ "v$toc" = "$GITHUB_REF_NAME" ] || { echo "TOC says $toc but the tag is $GITHUB_REF_NAME"; exit 1; }
+      - uses: BigWigsMods/packager@v2
+        env:
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: set these repository secrets to also upload to CurseForge / Wago.
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}

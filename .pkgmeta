@@ -1,0 +1,26 @@
+# BigWigs packager configuration (https://github.com/BigWigsMods/packager)
+# The addon lives in ForeverHandheld/; everything else in the repository is tooling.
+package-as: ForeverHandheld
+
+move-folders:
+  ForeverHandheld/ForeverHandheld: ForeverHandheld
+
+ignore:
+  - docs
+  - patches
+  - tests
+  - tools
+  - README.md
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - CODE_OF_CONDUCT.md
+  - SECURITY.md
+  - AGENTS.md
+  - CLAUDE.md
+
+plain-copy:
+  - ForeverHandheld/CommunityQR.tga
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown

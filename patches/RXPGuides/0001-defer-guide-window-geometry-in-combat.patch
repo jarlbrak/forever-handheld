@@ -1,0 +1,199 @@
+--- a/RXPGuides/GuideWindow.lua
++++ b/RXPGuides/GuideWindow.lua
+@@ -397,10 +397,25 @@
+ 
+ RXPFrame.SetStepFrameAnchor = SetStepFrameAnchor
+ 
+-local isResizing
++local layoutButton, isResizing, mouseReleaseEvents
++
++local function finishMouseLayout()
++    if mouseReleaseEvents then mouseReleaseEvents:UnregisterEvent("PLAYER_REGEN_ENABLED") end
++    RXPFrame:StopMovingOrSizing()
++    layoutButton = nil
++    if isResizing then
++        addon.settings.profile.frameHeight = RXPFrame:GetHeight()
++        addon.SetStep(addon.GetGuideProgress())
++        RXPFrame:SetScript("OnUpdate", nil)
++        isResizing = false
++    end
++    SetStepFrameAnchor()
++    addon.UpdateItemFrame()
++    addon.settings:SaveFramePositions()
++end
+ 
+ RXPFrame.OnMouseDown = function(self, button, resize)
+-    if addon.settings.profile.lockFrames then return end
++    if InCombatLockdown() or addon.settings.profile.lockFrames or layoutButton then return end
+ 
+     if resize or IsAltKeyDown() and
+         not (addon.currentGuide and addon.currentGuide.hidewindow) then
+@@ -410,19 +425,24 @@
+     else
+         RXPFrame:StartMoving()
+     end
++    layoutButton = button
+ end
+ 
+ RXPFrame.OnMouseUp = function(self, button)
+-    RXPFrame:StopMovingOrSizing()
+-    if isResizing then
+-        addon.settings.profile.frameHeight = RXPFrame:GetHeight()
+-        addon.SetStep(addon.GetGuideProgress())
+-        RXPFrame:SetScript("OnUpdate", nil)
++    if not layoutButton or layoutButton ~= button then return end
++    if not InCombatLockdown() then
++        finishMouseLayout()
++        return
+     end
+-    SetStepFrameAnchor()
+-    addon.UpdateItemFrame()
+-    isResizing = false
+-    addon.settings:SaveFramePositions()
++
++    -- Only a drag that started before combat needs a deferred release.
++    if not mouseReleaseEvents then
++        mouseReleaseEvents = CreateFrame("Frame")
++        mouseReleaseEvents:SetScript("OnEvent", finishMouseLayout)
++    end
++    if not mouseReleaseEvents:IsEventRegistered("PLAYER_REGEN_ENABLED") then
++        mouseReleaseEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
++    end
+ end
+ 
+ RXPFrame:SetScript("OnMouseDown", RXPFrame.OnMouseDown)
+@@ -1227,6 +1247,31 @@
+ 
+ CurrentStepFrame.EventHandler = addon.ActiveStepElementEventHandler
+ 
++-- The current step can keep updating its text while the secure targeting
++-- button prevents the container from changing visibility or height.
++local stepLayoutEvents = CreateFrame("Frame")
++local pendingStepHeight, pendingStepShown
++local function applyStepGeometry(height, shown)
++    if InCombatLockdown() then
++        if pendingStepShown == nil then
++            stepLayoutEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
++        end
++        pendingStepHeight, pendingStepShown = height, shown
++        return
++    end
++    if pendingStepShown ~= nil then
++        pendingStepHeight, pendingStepShown = nil, nil
++        stepLayoutEvents:UnregisterEvent("PLAYER_REGEN_ENABLED")
++    end
++    if height ~= nil and CurrentStepFrame:GetHeight() ~= height then
++        CurrentStepFrame:SetHeight(height)
++    end
++    if CurrentStepFrame:IsShown() ~= shown then CurrentStepFrame:SetShown(shown) end
++end
++stepLayoutEvents:SetScript("OnEvent", function()
++    if pendingStepShown ~= nil then applyStepGeometry(pendingStepHeight, pendingStepShown) end
++end)
++
+ function CurrentStepFrame.UpdateText()
+     addon.updateStepText = false
+     local guide = addon.currentGuide
+@@ -1234,12 +1279,11 @@
+ 
+     if addon.v2:IsGuideWindowEnabled() then
+         addon.v2.events:Trigger("UpdateActiveSteps", activeSteps, addon.player.name)
+-        CurrentStepFrame:SetHeight(0)
+-        CurrentStepFrame:Hide()
++        applyStepGeometry(0, false)
+         return
+     end
+ 
+-    CurrentStepFrame:Show()
++    if not InCombatLockdown() then applyStepGeometry(nil, true) end
+ 
+     -- StepScroll(n)
+     local totalHeight, frameHeight = 0, 0
+@@ -1392,7 +1436,7 @@
+         end
+     end
+ 
+-    CurrentStepFrame:SetHeight(totalHeight - 5)
++    applyStepGeometry(totalHeight - 5, true)
+ 
+     if addon.comms.grouping:CanBroadcastCurrentStep() then
+         addon.v2.events:Trigger("UpdateActiveSteps", activeSteps, addon.player.name)
+@@ -2141,7 +2185,49 @@
+     local guide = addon.GetGuideTable(RXPCData.currentGuideGroup,
+                                       RXPCData.currentGuideName)
+     return guide and addon:LoadGuide(guide,keepStep)
++end
++
++-- The targeting button can protect the legacy guide window during combat.
++-- Keep guide progress current and apply the latest window geometry afterward.
++local guideLayoutEvents = CreateFrame("Frame")
++local guideLayoutPending
++local function updateGuideWindowSize()
++    if InCombatLockdown() then
++        if not guideLayoutPending then
++            guideLayoutPending = true
++            guideLayoutEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
++        end
++        return
++    end
++
++    if guideLayoutPending then
++        guideLayoutPending = nil
++        guideLayoutEvents:UnregisterEvent("PLAYER_REGEN_ENABLED")
++    end
++    if addon.v2:IsGuideWindowEnabled() then return end
++    local guide = addon.currentGuide
++    local bottomFrameHeight = BottomFrame:GetHeight()
++
++    if bottomFrameHeight < 30 then
++        BottomFrame:Hide()
++        if RXPFrame:GetHeight() < 28 then RXPFrame:SetHeight(28) end
++    elseif guide and guide.hidewindow then
++        if RXPFrame:GetHeight() > 50 then
++            addon.settings.profile.frameHeight = RXPFrame:GetHeight()
++        end
++
++        RXPFrame:SetHeight(28)
++        BottomFrame:Hide()
++    elseif not BottomFrame:IsShown() then
++        if addon.settings.profile.frameHeight then
++            RXPFrame:SetHeight(math.max(addon.settings.profile.frameHeight,
++                                        50))
++        end
++
++        BottomFrame:Show()
++    end
+ end
++guideLayoutEvents:SetScript("OnEvent", updateGuideWindowSize)
+ 
+ function BottomFrame.UpdateFrame(self, stepn, startFrom, skip)
+     if addon.v2:IsGuideWindowEnabled() then return end
+@@ -2357,27 +2443,8 @@
+ 
+     local w = RXPFrame:GetWidth() - 35
+     ScrollChild:SetWidth(w)
+-    local bottomFrameHeight = BottomFrame:GetHeight()
+-
+-    if bottomFrameHeight < 30 then
+-        BottomFrame:Hide()
+-        if RXPFrame:GetHeight() < 28 then RXPFrame:SetHeight(28) end
+-    elseif guide and guide.hidewindow then
+-        if RXPFrame:GetHeight() > 50 then
+-            addon.settings.profile.frameHeight = RXPFrame:GetHeight()
+-        end
+-
+-        RXPFrame:SetHeight(28)
+-        BottomFrame:Hide()
+-    elseif not BottomFrame:IsShown() then
+-        if addon.settings.profile.frameHeight then
+-            RXPFrame:SetHeight(math.max(addon.settings.profile.frameHeight,
+-                                        50))
+-        end
++    updateGuideWindowSize()
+ 
+-        BottomFrame:Show()
+-    end
+-
+     addon.BetaVersionCheck()
+ 
+ end

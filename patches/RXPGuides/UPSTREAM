@@ -1,0 +1,6 @@
+# Pinned upstream for the patches in this folder.
+name=RXPGuides
+repository=https://github.com/RestedXP/RXPGuides
+version=v4.11.36
+# sha256 of GuideWindow.lua at that tag, with LF line endings
+GuideWindow.lua=12bd74872ebdf0af939571c9891f7c8d22fcd592d60513b3323cfe8a8964ff8d

@@ -1,0 +1,77 @@
+name: Bug report
+description: Something in Forever Handheld looks wrong, breaks, or causes a Lua error
+title: "Bug: "
+labels: ["bug"]
+assignees: ["jarlbrak"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please leave out your account name, BattleTag, realm and character names.
+        Forever Handheld only draws the HUD; if a button press does the wrong thing, it is probably a ControllerForever issue.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One sentence describing what is wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Log in with Forever Handheld and ControllerForever enabled.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Lua error or taint message
+      description: Paste the full error (BugSack/BugGrabber or /console scriptErrors 1). Include "blocked action" messages.
+      render: text
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      options:
+        - Steam Deck (SteamOS, Proton)
+        - Other Linux handheld or PC
+        - Windows PC with a controller
+        - macOS with a controller
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: combat
+    attributes:
+      label: Did it happen in combat?
+      options:
+        - Not sure
+        - "No"
+        - "Yes"
+        - Only right after combat ended
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions
+      description: Forever Handheld, ControllerForever, game client build, and any of RXPGuides, Loreward, Questie, RareScanner or AutoGear you use (and whether the RXPGuides patch is applied).
+      placeholder: |
+        Forever Handheld 3.7.180
+        ControllerForever 3.9.43
+        RXPGuides v4.11.36 (patched)
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: A screenshot of the HUD helps a lot. Crop out chat and names.

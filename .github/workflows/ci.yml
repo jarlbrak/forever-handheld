@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests (Lua ${{ matrix.lua }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # WoW runs Lua 5.1; LuaJIT is what most contributors have installed.
+        lua: ["5.1", "luajit-openresty"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: ${{ matrix.lua }}
+      - name: Addon regression tests
+        run: LUA=lua tests/run.sh
+      - name: Third-party patches apply to the pinned upstream
+        run: LUA=lua tests/patches/check.sh
+
+  lint:
+    name: Lint and repository checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: "5.1"
+      - uses: leafo/gh-actions-luarocks@v5
+      - name: Install luacheck
+        run: luarocks install luacheck
+      - name: luacheck
+        run: luacheck ForeverHandheld
+      - name: TOC, file list and private-data checks
+        run: python3 tools/validate.py
+      - name: shellcheck
+        run: shellcheck tests/run.sh tests/patches/check.sh patches/apply.sh
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  package:
+    name: Package (dry run)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: BigWigsMods/packager@v2
+        with:
+          args: -d
+      - name: Check the zip contains only the addon folder
+        run: |
+          zip=$(ls .release/*.zip)
+          unzip -Z1 "$zip" | sed 's|/.*||' | sort -u > top.txt
+          cat top.txt
+          [ "$(cat top.txt)" = "ForeverHandheld" ] || { echo "unexpected top-level folders"; exit 1; }
+          unzip -l "$zip" | grep -q 'ForeverHandheld/ForeverHandheld.toc'
+          ! unzip -Z1 "$zip" | grep -E '^ForeverHandheld/(tests|tools|patches|docs)/'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ForeverHandheld-package
+          path: .release/*.zip

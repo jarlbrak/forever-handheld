@@ -1,0 +1,30 @@
+# Local deploy configuration (host names, paths)
+tools/deploy.env
+*.local
+*.local.md
+AGENTS.local.md
+AGENTS.override.md
+CLAUDE.local.md
+.claude/settings.local.json
+.local/
+
+# Packager output
+.release/
+
+# Runtime captures and evidence: SavedVariables, logs and screenshots can contain
+# account, realm and character names. Keep them out of the repository.
+WTF/
+SavedVariables/
+*.log
+screenshots/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

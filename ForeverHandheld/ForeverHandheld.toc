@@ -1,0 +1,53 @@
+## Interface: 16001, 16002, 16003, 16100
+## Title: Forever Handheld
+## Notes: Compact native-icon controller dock and contextual target HUD for Steam Deck.
+## Version: 3.7.180
+## Author: jarlbrak
+## X-License: MIT
+## X-Website: https://github.com/jarlbrak/forever-handheld
+## X-Category: Interface Enhancements
+## Dependencies: ControllerForever
+## OptionalDeps: RXPGuides, Loreward, Questie, RareScanner, AutoGear
+## SavedVariablesPerCharacter: ForeverHandheldDB
+Controls.lua
+CombatSample.lua
+FieldReader.lua
+Progress.lua
+ForeverHandheld.lua
+ItemDetails.lua
+QuestReading.lua
+FeedTiming.lua
+Comms.lua
+PassiveChat.lua
+ActivityFeed.lua
+Windows.lua
+Workbench.lua
+ProfessionLabels.lua
+CraftingText.lua
+Panels.lua
+Story.lua
+RouteMap.lua
+JourneyNotice.lua
+RareReader.lua
+JourneyControls.lua
+Environment.lua
+MinimapVisibility.lua
+ColorEditor.lua
+AddonSettings.lua
+NativeSettings.lua
+NativeMenus.lua
+ProfessionMenus.lua
+SettingsHelp.lua
+ChatSettings.lua
+BindingSettings.lua
+RareAlerts.lua
+
+CollectionText.lua
+SocialDialogs.lua
+KeybindWorkspace.lua
+TutorialDetails.lua
+LayoutEditor.lua
+NativeEditMode.lua
+RadialHints.lua
+CalendarStyle.lua
+QuickKeybindControls.lua
